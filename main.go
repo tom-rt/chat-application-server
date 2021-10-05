@@ -35,6 +35,7 @@ type MessageStruct struct {
 	Message       string
 }
 
+var logFile *os.File
 var chatRoom []Session
 
 func isConnectionAllowed(nickname string) (bool, string) {
@@ -64,6 +65,7 @@ func disconnect(connection *websocket.Conn, nickname string, messageType int) {
 				chatRoom = chatRoom[:len(chatRoom)-1]
 			}
 			broadcastMessage(connection, nickname, "*"+nickname+" left the chat*", messageType)
+			writeLog(nickname + " has left the chat\n")
 		}
 	}
 }
@@ -83,17 +85,15 @@ func connect(connection *websocket.Conn, nickname string, messageType int) {
 	}
 
 	if isAllowed {
-		// Pushing the connection in the room
 		var newConnection Session = Session{Nickname: string(nickname), Connection: connection}
 		chatRoom = append(chatRoom, newConnection)
 		broadcastMessage(connection, nickname, "*Has joined the chat*", messageType)
-
+		writeLog(nickname + " has joined the chat\n")
 	} else {
 		fmt.Printf("Connection not allowed")
 	}
 }
 
-// Pass struct as a pointer instead ?
 func broadcastMessage(connection *websocket.Conn, nickname string, message string, messageType int) {
 	for _, session := range chatRoom {
 		if session.Nickname != nickname {
@@ -112,6 +112,7 @@ func disconnectRoom() {
 			fmt.Println("Error on disconnecting user:", err)
 		}
 	}
+	logFile.Close()
 	os.Exit(0)
 }
 
@@ -159,11 +160,33 @@ func handleSession(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func initLog() error {
+	var err error
+	logFile, err = os.OpenFile("history.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeLog(toLog string) {
+	_, err := logFile.Write([]byte(toLog))
+	if err != nil {
+		log.Println("Error writing to log file:", err)
+	}
+}
+
 func main() {
 	var port string
 	flag.StringVar(&port, "port", "8080", "wrong port value")
-
 	var addr string = "localhost:" + port
+
+	err := initLog()
+	if err != nil {
+		log.Println("Cannot open or create log file:", err)
+		return
+	}
+
 	http.HandleFunc("/run/session", handleSession)
 
 	fmt.Println("Server running on port:", port)
