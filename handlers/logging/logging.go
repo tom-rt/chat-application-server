@@ -3,6 +3,7 @@ package logging
 import (
 	"log"
 	"os"
+	"time"
 )
 
 var logFile *os.File
@@ -18,7 +19,11 @@ func InitLog() error {
 }
 
 func WriteLog(toLog string) {
-	_, err := logFile.Write([]byte(toLog))
+	t := time.Now()
+	now := t.String()
+	completeLog := now + " : " + toLog
+
+	_, err := logFile.Write([]byte(completeLog))
 	if err != nil {
 		log.Println("Error writing to log file:", err)
 	}

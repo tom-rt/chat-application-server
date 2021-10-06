@@ -63,7 +63,7 @@ func disconnect(connection *websocket.Conn, nickname string, messageType int) {
 				chatRoom[i] = chatRoom[0]
 				chatRoom = chatRoom[:len(chatRoom)-1]
 			}
-			broadcastMessage(connection, nickname, "*"+nickname+" left the chat*", messageType)
+			broadcastMessage(connection, nickname, "*Has left the chat*", messageType)
 			logging.WriteLog(nickname + " has left the chat\n")
 		}
 	}
