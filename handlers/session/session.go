@@ -73,11 +73,11 @@ func connect(connection *websocket.Conn, nickname string, messageType int) {
 	isAllowed, errMessage := isConnectionAllowed(chatRoom, nickname)
 	var response ConnectionResponse = ConnectionResponse{IsAllowed: isAllowed, Message: errMessage}
 
-	marshaledPayload, error := json.Marshal(response)
-	if error != nil {
-		log.Println("error marshalling:", error)
+	marshaledPayload, err := json.Marshal(response)
+	if err != nil {
+		log.Println("error marshalling:", err)
 	}
-	err := connection.WriteMessage(websocket.TextMessage, []byte(string(marshaledPayload)))
+	err = connection.WriteMessage(websocket.TextMessage, []byte(string(marshaledPayload)))
 	if err != nil {
 		log.Println("error writing message:", err)
 		return
